@@ -1,10 +1,13 @@
 import { authenticationSchema } from "@/schema/auth.schema";
 import bcrypt from "bcrypt";
 import { PrismaClient } from "@prisma/client";
+import jsonwebtoken from "jsonwebtoken";
 
 const prisma = new PrismaClient();
 
 export default async function SignUp(req, res) {
+  const secret = process.env.JWT_SECRET;
+
   try {
     const { email, password } = authenticationSchema.parse(req.body);
 
@@ -19,9 +22,22 @@ export default async function SignUp(req, res) {
       },
     });
 
+    const token = jsonwebtoken.sign(
+      { id: user.id, email: user.email },
+      secret,
+      {
+        expiresIn: "1h",
+      }
+    );
+
     delete user.hash;
 
-    return res.status(201).json({ user });
+    return res.status(201).json({
+      user: {
+        ...user,
+        token,
+      },
+    });
   } catch (error) {
     return res.status(400).json({ error: error.errors });
   }
