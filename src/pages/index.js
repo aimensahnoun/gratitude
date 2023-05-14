@@ -3,6 +3,8 @@ import { Inter } from "next/font/google";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { authenticationSchema } from "@/schema/auth.schema";
+import { useState } from "react";
+import axios from "axios";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -10,13 +12,22 @@ export default function Home() {
   const {
     register,
     handleSubmit,
-    watch,
     formState: { errors },
   } = useForm({
     resolver: zodResolver(authenticationSchema),
   });
 
-  const onSubmit = (data) => {};
+  const [err, setErr] = useState(null);
+
+  const onSubmit = async (data) => {
+    try {
+      const result = await axios.post("/api/auth/sign-up", data);
+      console.log(result.data);
+      window.localStorage.setItem("token", result.data.user.token);
+    } catch (error) {
+      setErr(error?.message);
+    }
+  };
 
   console.log(errors);
   console;
@@ -38,7 +49,7 @@ export default function Home() {
         <div class="w-full bg-white rounded-lg shadow dark:border md:mt-0 sm:max-w-md xl:p-0 dark:bg-gray-800 dark:border-gray-700">
           <div class="p-6 space-y-4 md:space-y-6 sm:p-8">
             <h1 class="text-xl font-bold leading-tight tracking-tight text-gray-900 md:text-2xl dark:text-white">
-              Sign in to your account
+              Sign Up
             </h1>
             <form
               onSubmit={handleSubmit(onSubmit)}
@@ -58,8 +69,8 @@ export default function Home() {
                   class="bg-gray-50 border border-gray-300 text-gray-900 sm:text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
                   placeholder="name@company.com"
                 />
-                {errors.email.message && (
-                  <span className="text-red-500">{errors.email.message}</span>
+                {errors?.email?.message && (
+                  <span className="text-red-500">{errors?.email?.message}</span>
                 )}
               </div>
               <div>
@@ -75,9 +86,9 @@ export default function Home() {
                   placeholder="••••••••"
                   class="bg-gray-50 border border-gray-300 text-gray-900 sm:text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
                 />
-                {errors.password.message && (
+                {errors?.password?.message && (
                   <span className="text-red-500">
-                    {errors.password.message}
+                    {errors?.password?.message}
                   </span>
                 )}
               </div>
@@ -124,6 +135,8 @@ export default function Home() {
                 </a>
               </p>
             </form>
+
+            {err && <span className="text-red-500">{err}</span>}
           </div>
         </div>
       </div>

@@ -2,6 +2,7 @@ import { authenticationSchema } from "@/schema/auth.schema";
 import bcrypt from "bcrypt";
 import { PrismaClient } from "@prisma/client";
 import jsonwebtoken from "jsonwebtoken";
+import { ZodError } from "zod";
 
 const prisma = new PrismaClient();
 
@@ -39,6 +40,10 @@ export default async function SignUp(req, res) {
       },
     });
   } catch (error) {
-    return res.status(400).json({ error: error.errors });
+    if (error instanceof ZodError) {
+      return res.status(400).json({ error: error.errors });
+    }
+
+    return res.status(500).json({ error: error.message });
   }
 }
