@@ -1,5 +1,8 @@
 import { authenticationSchema } from "@/schema/auth.schema";
 import bcrypt from "bcrypt";
+import { PrismaClient } from "@prisma/client";
+
+const prisma = new PrismaClient();
 
 export default async function SignUp(req, res) {
   try {
@@ -9,9 +12,16 @@ export default async function SignUp(req, res) {
 
     const hashedPassword = await bcrypt.hash(password, salt);
 
-    return res
-      .status(200)
-      .json({ email, hashedPassword, verifyPassword, salt });
+    const user = await prisma.user.create({
+      data: {
+        email,
+        hash: hashedPassword,
+      },
+    });
+
+    delete user.hash;
+
+    return res.status(201).json({ user });
   } catch (error) {
     return res.status(400).json({ error: error.errors });
   }
